@@ -1,5 +1,3 @@
-
-```bash
 #!/bin/bash
 
 # ============================================
@@ -829,4 +827,88 @@ EOF
 chmod +x /usr/local/bin/5g-backup
 
 # Abone ekleme script'i
-cat > /usr/local/bin
+cat > /usr/local/bin/5g-add-subscriber << 'EOF'
+#!/bin/bash
+
+if [ $# -ne 3 ]; then
+    echo "Kullanım: $0 <IMSI> <K> <OPC>"
+    echo "Örnek: $0 901700123456789 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA"
+    exit 1
+fi
+
+IMSI=$1
+K=$2
+OPC=$3
+
+open5gs-dbctl add "$IMSI" "$K" "$OPC"
+
+if [ $? -eq 0 ]; then
+    echo "✅ Abone eklendi: IMSI=$IMSI"
+    echo "   K: $K"
+    echo "   OPC: $OPC"
+else
+    echo "❌ Abone eklenemedi!"
+fi
+EOF
+
+chmod +x /usr/local/bin/5g-add-subscriber
+
+# Log görüntüleme script'i
+cat > /usr/local/bin/5g-logs << 'EOF'
+#!/bin/bash
+
+case $1 in
+    amf)
+        journalctl -u open5gs-amfd -f
+        ;;
+    smf)
+        journalctl -u open5gs-smfd -f
+        ;;
+    upf)
+        journalctl -u open5gs-upfd -f
+        ;;
+    hss)
+        journalctl -u open5gs-hssd -f
+        ;;
+    webui)
+        journalctl -u open5gs-webui -f
+        ;;
+    mongo)
+        tail -f /var/log/mongodb/mongod.log
+        ;;
+    nginx)
+        tail -f /var/log/nginx/access.log
+        ;;
+    *)
+        echo "Kullanım: $0 {amf|smf|upf|hss|webui|mongo|nginx}"
+        echo "Örnek: $0 amf"
+        exit 1
+        ;;
+esac
+EOF
+
+chmod +x /usr/local/bin/5g-logs
+
+success "Yardımcı script'ler oluşturuldu"
+
+# ============================================
+# KURULUM TAMAMLANDI
+# ============================================
+
+step "KURULUM TAMAMLANDI"
+
+# IP adresi
+IP_ADDRESS=$(hostname -I | awk '{print $1}')
+
+# Kurulum özeti
+echo ""
+echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}               🎉 KURULUM BAŞARIYLA TAMAMLANDI! 🎉          ${NC}"
+echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+echo ""
+echo -e "${CYAN}🚀 5G CORE NETWORK ERİŞİM BİLGİLERİ:${NC}"
+echo -e "  🌐 Web Arayüzü: ${YELLOW}https://$IP_ADDRESS${NC}"
+echo -e "  📡 API Endpoint: ${YELLOW}https://$IP_ADDRESS/api${NC}"
+echo -e "  🗄️  MongoDB: ${YELLOW}mongodb://open5gs:Open5GS@2024@localhost:27017/open5gs${NC}"
+echo ""
+echo -e "${CYAN}🔐 VARS
