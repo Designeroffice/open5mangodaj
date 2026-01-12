@@ -1,3 +1,6 @@
+#!/bin/bash
+
+cd open5gs
 info "Open5GS derleniyor (bu işlem 10-15 dakika sürebilir)..."
 meson build --prefix=/usr/local --buildtype=release
 ninja -C build
